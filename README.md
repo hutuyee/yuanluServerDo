@@ -1,9 +1,15 @@
 # H_aaa
+
 我更改了Bukkit 以及Velocity文件夹
+
 具体内容为
+
 [ + ] 修复设置home的bug
+
 [ + ] 添加死亡点Back
+
 [ + ] 修复tab补全
+
 [ - ] 减去检测版本一致
 
 
