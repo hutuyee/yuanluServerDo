@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import yuan.plugins.serverDo.*;
@@ -437,6 +438,7 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 		val player = e.getPlayer();
 		if ((player == null) || EVENT_JOIN_SLEEP.contains(player.getUniqueId())) return;
 		val f = e.getFrom();
+
 		val t = e.getTo();
 		if (f == null || t == null || (Objects.equals(f.getWorld(), t.getWorld()) && f.distanceSquared(t) < Conf.getTpEventMinDistanceSquare())) return;
 		BackHandler.recordLocation(player, f);
@@ -562,6 +564,20 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 		}
 	}
 
+	/**
+	 * 死亡记录Back中
+	 *
+	 * @author H_aaa
+	 */
+	@EventHandler
+	private void PlayerDeath(PlayerDeathEvent e){
+		val player = (Player) e.getEntity().getPlayer();
+        Location f = null;
+        if (player != null) {
+            f = player.getLocation();
+        }
+        BackHandler.recordLocation(player,f);
+	}
 	/**
 	 * Back处理器
 	 *
@@ -1094,8 +1110,10 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 			listenCallBack(player, Channel.TP_LOC, 0, (BoolConsumer) success -> {
 				if (!success) BC_ERROR.send(player);
 			});
-			Channel.TpLoc.s0C_tpLoc(loc, loc.getServer());
+			Main.send(player,Channel.TpLoc.s0C_tpLoc(loc, loc.getServer()));
+
 		}
+
 
 		/**
 		 * 远程传送
