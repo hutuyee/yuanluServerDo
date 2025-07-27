@@ -438,7 +438,6 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 		val player = e.getPlayer();
 		if ((player == null) || EVENT_JOIN_SLEEP.contains(player.getUniqueId())) return;
 		val f = e.getFrom();
-
 		val t = e.getTo();
 		if (f == null || t == null || (Objects.equals(f.getWorld(), t.getWorld()) && f.distanceSquared(t) < Conf.getTpEventMinDistanceSquare())) return;
 		BackHandler.recordLocation(player, f);
@@ -505,7 +504,9 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 			val info = Channel.ServerInfo.parseS(message);
 			TabHandler.TAB_REPLACE.put(player.getUniqueId(), info.getTab().intern());
 			val meVer = Main.getMain().getDescription().getVersion();
-			if (!meVer.equals(info.getVersion())) VER_NO_RECOMMEND.send(player, meVer, info.getVersion());
+			if (!meVer.equals(info.getVersion()))
+				Bukkit.getLogger().info("");
+				// VER_NO_RECOMMEND.send(player, meVer, info.getVersion());
 			if (info.getProxyType() == Channel.ServerInfo.ServerPkg.ProxyType.Velocity) {
 				// velocity 高版本需要注册命令实现tab替换
 				Main.send(player, Channel.ServerInfo.sendC(Main.getMain().getName(), CommandManager.getCommandNames()));
@@ -563,7 +564,6 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 			if (sound != null) player.playSound(player.getLocation(), sound.sound, sound.volume, sound.pitch);
 		}
 	}
-
 	/**
 	 * 死亡记录Back中
 	 *
@@ -572,12 +572,13 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 	@EventHandler
 	private void PlayerDeath(PlayerDeathEvent e){
 		val player = (Player) e.getEntity().getPlayer();
-        Location f = null;
-        if (player != null) {
-            f = player.getLocation();
-        }
-        BackHandler.recordLocation(player,f);
+		Location f = null;
+		if (player != null) {
+			f = player.getLocation();
+		}
+		BackHandler.recordLocation(player,f);
 	}
+
 	/**
 	 * Back处理器
 	 *
@@ -643,7 +644,7 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 		 * @param player   玩家
 		 * @param toServer 玩家即将传送的服务器(null为本地)
 		 */
-		private static void recordLocation(@NonNull Player player, String toServer) {
+		public static void recordLocation(@NonNull Player player, String toServer) {
 			recordLocation(player, toServer, null);
 		}
 
@@ -1110,11 +1111,13 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 			listenCallBack(player, Channel.TP_LOC, 0, (BoolConsumer) success -> {
 				if (!success) BC_ERROR.send(player);
 			});
-			Main.send(player,Channel.TpLoc.s0C_tpLoc(loc, loc.getServer()));
-
+			byte[] data = Channel.TpLoc.s0C_tpLoc(loc, loc.getServer());
+			Main.send(player,data);
 		}
-
-
+//		public static void sendPluginMessage(Player player, String channel, byte[] data) {
+//			if (!player.isOnline()) return;
+//			player.sendPluginMessage(channel, data);
+//		}
 		/**
 		 * 远程传送
 		 *
