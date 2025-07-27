@@ -348,30 +348,15 @@ public final class ConfigManager {
 		 *
 		 * @return file
 		 */
-//		public File getFile(UUID u, boolean mk) {
-//			val folder = Main.getMain().getDataFolder();
-//			val uuid = u.toString();
-//			folder.resolve(uuid.substring(0, 2)).resolve(uuid);
-//			if (mk) folder.toFile().mkdirs();
-//			return folder.resolve(fname).toFile();
-//		}
 		public File getFile(UUID u, boolean mk) {
-			// 插件数据目录路径，例如 plugins/你的插件名/
 			val folder = Main.getMain().getDataFolder();
-
-			// UUID 字符串
 			val uuid = u.toString();
-
-			// 构建路径： plugins/你的插件名/12/uuid/
 			val dirPath = folder.resolve(uuid.substring(0, 2)).resolve(uuid);
-
-			// 创建目录（如果需要）
 			if (mk) {
-				dirPath.toFile().mkdirs();
+				dirPath.toFile().mkdirs(); // 创建目录
 			}
-
-			// 返回该 UUID 对应的目录
-			return dirPath.toFile();
+			// 返回 home.yml 文件，而不是目录
+			return dirPath.resolve(fname).toFile();
 		}
 
 
