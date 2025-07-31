@@ -351,14 +351,10 @@ public final class ConfigManager {
 		public File getFile(UUID u, boolean mk) {
 			val folder = Main.getMain().getDataFolder();
 			val uuid = u.toString();
-			val dirPath = folder.resolve(uuid.substring(0, 2)).resolve(uuid);
-			if (mk) {
-				dirPath.toFile().mkdirs(); // 创建目录
-			}
-			// 返回 home.yml 文件，而不是目录
-			return dirPath.resolve(fname).toFile();
+			folder.resolve(uuid.substring(0, 2)).resolve(uuid);
+			if (mk) folder.toFile().mkdirs();
+			return folder.resolve(fname).toFile();
 		}
-
 
 		/**
 		 * 加载

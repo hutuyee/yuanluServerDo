@@ -40,7 +40,6 @@ public final class CmdWarp extends TabWarp {
 					Core.listenCallBack(player, Channel.WARP, 3, (BoolConsumer) success -> {
 						if (!success) BC_ERROR.send(sender);
 					});
-					Core.BackHandler.recordLocation(player,server);
 					Main.send(player, Channel.Warp.s3C_tpWarp(name));
 				}
 			});

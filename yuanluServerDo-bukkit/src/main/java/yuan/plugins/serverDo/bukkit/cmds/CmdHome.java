@@ -39,11 +39,8 @@ public final class CmdHome extends TabHome {
 					msg("tp", sender, name, server);
 					Core.listenCallBack(player, Channel.HOME, 3, (BoolConsumer) success -> {
 						if (!success) BC_ERROR.send(sender);
-
 					});
-					Core.BackHandler.recordLocation(player,server);
 					Main.send(player, Channel.Home.s3C_tpHome(name));
-
 				}
 			});
 			Main.send(player, Channel.Home.s2C_searchHome(arg));
