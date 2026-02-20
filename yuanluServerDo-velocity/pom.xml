@@ -24,6 +24,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
                 <executions>
                     <execution>
                         <configuration>
@@ -65,13 +66,18 @@
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/net.md-5/bungeecord-api -->
         <dependency>
-            <groupId>net.md-5</groupId>
-            <artifactId>bungeecord-config</artifactId>
-            <version>1.16-R0.4</version>
-            <scope>compile</scope>
+            <groupId>org.spongepowered</groupId>
+            <artifactId>configurate-yaml</artifactId>
+            <version>4.1.2</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/net.md-5/bungeecord-api -->
+<!--        <dependency>-->
+<!--            <groupId>net.md-5</groupId>-->
+<!--            <artifactId>bungeecord-config</artifactId>-->
+<!--            <version>1.16-R0.4</version>-->
+<!--            <scope>compile</scope>-->
+<!--        </dependency>-->
         <!-- https://mvnrepository.com/artifact/org.bstats/bstats-bukkit -->
         <dependency>
             <groupId>org.bstats</groupId>

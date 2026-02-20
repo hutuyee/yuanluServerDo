@@ -101,9 +101,9 @@
     <modules>
         <module>yuanluServerDo-common</module>
         <module>yuanluServerDo-bukkit</module>
-        <module>yuanluServerDo-bungeecord</module>
+        <!-- <module>yuanluServerDo-bungeecord</module> -->
         <module>yuanluServerDo-velocity</module>
-        <module>yuanluServerDo-bukkit-bungeecord</module>
+        <!-- <module>yuanluServerDo-bukkit-bungeecord</module> -->
         <module>yuanluServerDo-bukkit-velocity</module>
     </modules>
     <!-- omitted xml -->

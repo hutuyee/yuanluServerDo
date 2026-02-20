@@ -28,17 +28,14 @@ import com.velocitypowered.api.scheduler.ScheduledTask;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
-import net.md_5.bungee.config.Configuration;
-import net.md_5.bungee.config.ConfigurationProvider;
-import net.md_5.bungee.config.YamlConfiguration;
 import org.bstats.charts.MultiLineChart;
 import org.bstats.charts.SimplePie;
 import org.bstats.velocity.Metrics;
+import org.spongepowered.configurate.ConfigurationNode;
 import yuan.plugins.serverDo.Channel;
 import yuan.plugins.serverDo.ShareData;
 import yuan.plugins.serverDo.Tool;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -271,23 +268,30 @@ public final class Main {
 
 	/** 检查中央配置文件 */
 	private void checkYuanluConfig() {
-		val configFile = getDataFolder().getParent().resolve("yuanlu").resolve("config.yml");
-		Configuration config = null;
 
-		if (Files.isRegularFile(configFile)) try (val in = Files.newInputStream(configFile)) {
-			config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(in);
-		} catch (FileNotFoundException ignored) {
-		} catch (IOException e) {
-			e.printStackTrace();
+		val configFile = getDataFolder()
+				.getParent()
+				.resolve("yuanlu")
+				.resolve("config.yml");
+
+		ConfigurationNode config = null;
+
+		if (Files.isRegularFile(configFile)) {
+			try {
+				config = YamlUtil.load(configFile);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
+
 		if (!Files.exists(configFile) || config == null) {
 			DEBUG = false;
 		} else {
-			DEBUG = config.getBoolean("debug", false);
+			DEBUG = config.node("debug").getBoolean(false);
 		}
+
 		ShareData.setDEBUG(DEBUG);
 		ShareData.setLogger(getLogger());
-
 	}
 
 	/**
@@ -434,7 +438,6 @@ public final class Main {
 
 		getProxy().getChannelRegistrar().register(BC_CHANNEL);
 		getLogger().info(SHOW_NAME + "-启动(velocity)");
-		getLogger().info(Main.getPluginContainer().getDescription().getVersion().orElse("Unknown"));
 
 		startTimeAmendLoop();
 	}
@@ -451,6 +454,8 @@ public final class Main {
 	public void event_onProxyShutdown(ProxyShutdownEvent event) {
 		val timeAmendTask = this.timeAmendTask;
 		if (timeAmendTask != null) timeAmendTask.cancel();
+		ConfigManager.closeSave();
+		getLogger().info(SHOW_NAME + "-关闭(velocity)");
 	}
 
 	/**
@@ -478,21 +483,28 @@ public final class Main {
 	 *
 	 * @author yuanlu
 	 */
-	public Configuration loadFile(String fileName) {
+	public ConfigurationNode loadFile(String fileName) {
 		try {
 			val file = getDataFolder().resolve(fileName);
-			if (!Files.exists(file.getParent())) Files.createDirectories(file.getParent());
-			if (DEBUG) getLogger().info(file.toAbsolutePath().toString());
+
+			if (!Files.exists(file.getParent()))
+				Files.createDirectories(file.getParent());
+
+			if (DEBUG)
+				getLogger().info(file.toAbsolutePath().toString());
+
 			if (!Files.exists(file)) {
 				try (val in = classLoader.getResourceAsStream(fileName)) {
-					Files.copy(in, file);
+					if (in != null) {
+						Files.copy(in, file);
+					}
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
 			}
-			try (val in = Files.newInputStream(file)) {
-				return ConfigurationProvider.getProvider(YamlConfiguration.class).load(in);
-			}
+
+			return YamlUtil.load(file);
+
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Throwable e) {
@@ -510,24 +522,33 @@ public final class Main {
 	 *
 	 * @author yuanlu
 	 */
-	public Configuration loadFile(String fileName, String... oldNames) {
+	public ConfigurationNode loadFile(String fileName, String... oldNames) {
 
 		val file = getDataFolder().resolve(fileName);
-		if (Files.isRegularFile(file)) return loadFile(fileName);
+
+		if (Files.isRegularFile(file))
+			return loadFile(fileName);
 
 		for (String old : oldNames) {
+
 			val f = getDataFolder().resolve(old);
+
 			try {
-				if (!Files.isRegularFile(f)) continue;
+				if (!Files.isRegularFile(f))
+					continue;
+
 				Files.copy(f, file);
 				Files.move(f, f.getParent().resolve(f.getFileName() + ".old"));
+
 				return loadFile(fileName);
+
 			} catch (RuntimeException e) {
 				throw e;
 			} catch (Throwable e) {
 				throw new RuntimeException(e);
 			}
 		}
+
 		return loadFile(fileName);
 	}
 
@@ -824,14 +845,15 @@ public final class Main {
 	 */
 	private void startTimeAmendLoop() {
 
-		final long timeAmend = ConfigManager.getConfig().getLong("timeAmend", 1000 * 60 * 5);
+		final long timeAmend = ConfigManager.getConfig()
+				.node("timeAmend")
+				.getLong(1000L * 60 * 5);
 
-		if (timeAmend > 0) timeAmendTask = getProxy().getScheduler()//
-				.buildTask(this, Core::startTimeAmend)//
-				.delay(timeAmend, TimeUnit.MILLISECONDS)//
-				.repeat(timeAmend, TimeUnit.MILLISECONDS)//
-				.schedule();
-
+		if (timeAmend > 0)
+			timeAmendTask = getProxy().getScheduler()
+					.buildTask(this, Core::startTimeAmend)
+					.delay(timeAmend, TimeUnit.MILLISECONDS)
+					.repeat(timeAmend, TimeUnit.MILLISECONDS)
+					.schedule();
 	}
-
 }

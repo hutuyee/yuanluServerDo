@@ -7,9 +7,9 @@ import com.google.common.base.Objects;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import lombok.*;
-import net.md_5.bungee.config.Configuration;
-import net.md_5.bungee.config.ConfigurationProvider;
-import net.md_5.bungee.config.YamlConfiguration;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 import yuan.plugins.serverDo.*;
 import yuan.plugins.serverDo.Tool.ThrowableFunction;
 import yuan.plugins.serverDo.Tool.ThrowableRunnable;
@@ -34,7 +34,7 @@ public final class ConfigManager {
 	/** 禁用的服务器 */
 	private static final   HashSet<String>                  BAN_SERVER = new HashSet<>();
 	/** 配置文件 */
-	private static @Getter Configuration                    config;
+	private static @Getter ConfigurationNode                    config;
 	/** tab替换 */
 	private static @Getter
 	@Setter                String                           tabReplace;
@@ -101,18 +101,32 @@ public final class ConfigManager {
 	 *
 	 * @param config config
 	 */
-	public static void init(Configuration config) {
+	public static void init(ConfigurationNode config) {
 		ConfigManager.config = config;
-		val tabReplace = config.getString("player-tab-replace", "yl★:" + Tool.randomString(8));
+
+		val tabReplace = config.node("player-tab-replace")
+				.getString("yl★:" + Tool.randomString(8));
+
 		setTabReplace(tabReplace);
-		setSaveDelay(config.getLong("save-delay", getSaveDelay()));
-		setUseAt(config.getBoolean("use-at", isUseAt()));
+
+		setSaveDelay(config.node("save-delay")
+				.getLong(getSaveDelay()));
+
+		setUseAt(config.node("use-at")
+				.getBoolean(isUseAt()));
+
 		loadGroup(config);
-		serverInfo = Channel.ServerInfo.sendS(tabReplace, Main.getPluginContainer().getDescription().getVersion().orElse("Unknown"),
-				Channel.ServerInfo.ServerPkg.ProxyType.Velocity);
+
+		serverInfo = Channel.ServerInfo.sendS(
+				tabReplace,
+				Main.getPluginContainer()
+						.getDescription()
+						.getVersion()
+						.orElse("Unknown"),
+				Channel.ServerInfo.ServerPkg.ProxyType.Velocity
+		);
 
 		Arrays.stream(ConfFile.values()).forEach(ConfFile::load);
-
 	}
 
 	/**
@@ -120,25 +134,45 @@ public final class ConfigManager {
 	 *
 	 * @param config 配置文件
 	 */
-	private static void loadGroup(Configuration config) {
-		val sg = config.getSection("server-group");
-		if (sg == null) {
+	private static void loadGroup(ConfigurationNode config) {
+
+		val sg = config.node("server-group");
+
+		if (sg.empty()) {
 			errorGroup = true;
 			Main.getMain().getLogger().warning("[SERVER GROUP] config error!");
 			return;
 		}
-		for (val key : sg.getKeys()) {
-			val group = sg.getStringList(key);
-			for (val server : group) {
+
+		for (val entry : sg.childrenMap().entrySet()) {
+
+			val key = entry.getKey().toString();
+            List<String> group = null;
+            try {
+                group = entry.getValue().getList(String.class, Collections.emptyList());
+            } catch (SerializationException e) {
+                throw new RuntimeException(e);
+            }
+
+            for (val server : group) {
 				HashSet<String> canTp = GROUPS.computeIfAbsent(server, k -> new HashSet<>());
 				canTp.addAll(group);
 			}
-			if (ShareData.isDEBUG()) ShareData.getLogger().info("加载组 " + key + ": " + group);
+
+			if (ShareData.isDEBUG())
+				ShareData.getLogger().info("加载组 " + key + ": " + group);
 		}
 
 		BAN_SERVER.clear();
-		BAN_SERVER.addAll(config.getStringList("server-ban"));
-	}
+        try {
+            BAN_SERVER.addAll(
+                    config.node("server-ban")
+                            .getList(String.class, Collections.emptyList())
+            );
+        } catch (SerializationException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 	/**
 	 * 保存配置<br>
@@ -223,17 +257,19 @@ public final class ConfigManager {
 		WARP("warp.yml") {
 			@Override
 			protected void load0() throws IOException {
-				Configuration warps = YAML.load(getFile());
-				for (String name : warps.getKeys()) {
-					Configuration warp = warps.getSection(name);
+				ConfigurationNode warps = YamlUtil.load(getFile().toPath());
 
-					String world = warp.getString("world", null);
-					String server = warp.getString("server", null);
-					double x = warp.getDouble("x", Double.NaN);
-					double y = warp.getDouble("y", Double.NaN);
-					double z = warp.getDouble("z", Double.NaN);
-					float Y = warp.getFloat("yaw", Float.NaN);
-					float P = warp.getFloat("pitch", Float.NaN);
+				for (ConfigurationNode child : warps.childrenMap().values()) {
+					String name = child.key().toString();
+					// Configuration warp = warps.getSection(name);
+
+					String world = child.node("world").getString();
+					String server = child.node("server").getString();
+					double x = child.node("x").getDouble();
+					double y = child.node('y').getDouble();
+					double z = child.node("z").getDouble();
+					float Y = child.node("yaw").getFloat();
+					float P = child.node("pitch").getFloat();
 					if (world == null || server == null || Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z) || Float.isNaN(Y) || Float.isNaN(P)) {
 						ShareData.getLogger().warning(String.format("[WARPS] 错误的warp数据: %s %s [%s, %s, %s] [%s,%s]", server, world, x, y, z, Y, P));
 					} else {
@@ -244,25 +280,26 @@ public final class ConfigManager {
 
 			@Override
 			protected void save0() throws IOException {
-				Configuration warps = new Configuration();
+				ConfigurationNode warps = YamlConfigurationLoader.builder()
+						.path(getFile().toPath())
+						.build()
+						.createNode();
 				for (Map.Entry<String, ShareLocation> e : WARPS.entrySet()) {
 					String name = e.getKey();
 					ShareLocation warp = e.getValue();
-					warps.set(name + ".world", warp.getWorld());
-					warps.set(name + ".server", warp.getServer());
-					warps.set(name + ".x", warp.getX());
-					warps.set(name + ".y", warp.getY());
-					warps.set(name + ".z", warp.getZ());
-					warps.set(name + ".yaw", warp.getYaw());
-					warps.set(name + ".pitch", warp.getPitch());
+					warps.node(name, "world").set(warp.getWorld());
+					warps.node(name, "server").set(warp.getServer());
+					warps.node(name, "x").set(warp.getX());
+					warps.node(name, "y").set(warp.getY());
+					warps.node(name, "z").set(warp.getZ());
+					warps.node(name, ".yaw").set(warp.getYaw());
+					warps.node(name, ".pitch").set(warp.getPitch());
 				}
-				YAML.save(warps, getFile());
+				YamlUtil.save(warps, getFile().toPath());
 			}
 
 		};
 
-		/** Yaml处理器 */
-		protected static final ConfigurationProvider   YAML       = ConfigurationProvider.getProvider(YamlConfiguration.class);
 		/** 保存延时 */
 		private static final   EnumMap<ConfFile, Long> SAVE_DELAY = new EnumMap<>(ConfFile.class);
 		/** 文件名 */
@@ -333,8 +370,6 @@ public final class ConfigManager {
 			}
 		};
 
-		/** Yaml处理器 */
-		protected static final ConfigurationProvider         YAML       = ConfigurationProvider.getProvider(YamlConfiguration.class);
 		/** 文件名 */
 		protected final        String                        fname;
 		/** 需要保存 */
@@ -447,24 +482,34 @@ public final class ConfigManager {
 		private HashMap<String, ShareLocation> load0(@NonNull UUID uid) throws IOException {
 			HashMap<String, ShareLocation> m = new HashMap<>();
 			val f = HOME.getFile(uid, false);
-			val warps = PlayerConfFile.YAML.load(f);
-			for (val name : warps.getKeys()) {
-				val warp = warps.getSection(name);
 
-				val world = warp.getString("world", null);
-				val server = warp.getString("server", null);
-				val x = warp.getDouble("x", Double.NaN);
-				val y = warp.getDouble("y", Double.NaN);
-				val z = warp.getDouble("z", Double.NaN);
-				val Y = warp.getFloat("yaw", Float.NaN);
-				val P = warp.getFloat("pitch", Float.NaN);
-				if (world == null || server == null || Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z) || Float.isNaN(Y) || Float.isNaN(P)) {
-					ShareData.getLogger()
-							.warning(String.format("[HOMES] 错误的home数据: %s: %s %s [%s, %s, %s] [%s,%s]", f.getName(), server, world, x, y, z, Y, P));
+			val warps = YamlUtil.load(f.toPath());
+
+			for (val entry : warps.childrenMap().entrySet()) {
+				val name = entry.getKey().toString();
+				val warp = entry.getValue();
+
+				val world = warp.node("world").getString();
+				val server = warp.node("server").getString();
+				val x = warp.node("x").getDouble(Double.NaN);
+				val y = warp.node("y").getDouble(Double.NaN);
+				val z = warp.node("z").getDouble(Double.NaN);
+				val Y = (float) warp.node("yaw").getDouble(Double.NaN);
+				val P = (float) warp.node("pitch").getDouble(Double.NaN);
+
+				if (world == null || server == null ||
+						Double.isNaN(x) || Double.isNaN(y) || Double.isNaN(z) ||
+						Float.isNaN(Y) || Float.isNaN(P)) {
+
+					ShareData.getLogger().warning(
+							String.format("[HOMES] 错误的home数据: %s: %s %s [%s, %s, %s] [%s,%s]",
+									f.getName(), server, world, x, y, z, Y, P)
+					);
 				} else {
 					m.put(name, new ShareLocation(x, y, z, Y, P, world, server));
 				}
 			}
+
 			return m;
 		}
 
@@ -477,19 +522,24 @@ public final class ConfigManager {
 		 * @throws IOException IOE
 		 */
 		private void save0(@NonNull UUID uid, HashMap<String, ShareLocation> map) throws IOException {
-			val warps = new Configuration();
+
+			val file = PlayerConfFile.HOME.getFile(uid, true).toPath();
+			val warps = YamlUtil.createEmptyNode(); // 我下面给你实现
+
 			for (val e : map.entrySet()) {
 				val name = e.getKey();
 				val warp = e.getValue();
-				warps.set(name + ".world", warp.getWorld());
-				warps.set(name + ".server", warp.getServer());
-				warps.set(name + ".x", warp.getX());
-				warps.set(name + ".y", warp.getY());
-				warps.set(name + ".z", warp.getZ());
-				warps.set(name + ".yaw", warp.getYaw());
-				warps.set(name + ".pitch", warp.getPitch());
+
+				warps.node(name, "world").set(warp.getWorld());
+				warps.node(name, "server").set(warp.getServer());
+				warps.node(name, "x").set(warp.getX());
+				warps.node(name, "y").set(warp.getY());
+				warps.node(name, "z").set(warp.getZ());
+				warps.node(name, "yaw").set(warp.getYaw());
+				warps.node(name, "pitch").set(warp.getPitch());
 			}
-			PlayerConfFile.YAML.save(warps, PlayerConfFile.HOME.getFile(uid, true));
+
+			YamlUtil.save(warps, file);
 		}
 	}
 }
