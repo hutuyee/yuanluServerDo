@@ -305,6 +305,7 @@ public class Main extends Plugin implements Listener {
 	public void onDisable() {
 		if (timeAmendLooper != null) timeAmendLooper = null;
 		ConfigManager.closeSave();
+		getLogger().info(SHOW_NAME + "-关闭(bungee)");
 	}
 
 	/**
