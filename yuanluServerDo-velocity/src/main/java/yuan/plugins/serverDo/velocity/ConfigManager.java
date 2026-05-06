@@ -351,9 +351,9 @@ public final class ConfigManager {
 		public File getFile(UUID u, boolean mk) {
 			val folder = Main.getMain().getDataFolder();
 			val uuid = u.toString();
-			folder.resolve(uuid.substring(0, 2)).resolve(uuid);
-			if (mk) folder.toFile().mkdirs();
-			return folder.resolve(fname).toFile();
+			val path = folder.resolve(uuid.substring(0, 2)).resolve(uuid);
+			if (mk) path.toFile().mkdirs();
+			return path.resolve(fname).toFile();
 		}
 
 		/**

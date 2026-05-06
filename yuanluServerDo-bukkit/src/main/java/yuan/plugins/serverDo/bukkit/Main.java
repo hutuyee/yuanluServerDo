@@ -1,6 +1,5 @@
 package yuan.plugins.serverDo.bukkit;
 
-import cn.mapland.yuanlu.updater.bukkit.BukkitUpdater;
 import lombok.Getter;
 import lombok.val;
 import org.bstats.bukkit.Metrics;
@@ -281,10 +280,9 @@ public class Main extends JavaPlugin implements Listener {
 	@Override
 	public void onEnable() {
 
-		bstats();
-		//		update();
+        bstats();
 
-		if (ShareData.isDEBUG()) {
+        if (ShareData.isDEBUG()) {
 			MESSAGE_LOST_NODE = loadFile("lang-lost.yml");
 			MESSAGE_LOST_NODE.set("message", loadFile("config.yml").getConfigurationSection("message"));
 		}
@@ -329,18 +327,6 @@ public class Main extends JavaPlugin implements Listener {
 		val f = new File(getDataFolder(), fileName);
 		try (val o = new OutputStreamWriter(new FileOutputStream(f), StandardCharsets.UTF_8)) {
 			o.write(c.saveToString());
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-	}
-
-	/** 更新检测 */
-	private void update() {
-		try {
-			val updater = new BukkitUpdater(this);
-			updater.useCmd();
-			updater.dailyCheck();
-			if (updater.getConf().isNoticeUser()) updater.noticeJoin();
 		} catch (Throwable e) {
 			e.printStackTrace();
 		}

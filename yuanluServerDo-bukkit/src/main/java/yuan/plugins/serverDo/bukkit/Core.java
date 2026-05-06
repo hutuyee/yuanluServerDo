@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.plugin.messaging.PluginMessageListener;
 import yuan.plugins.serverDo.*;
@@ -421,6 +422,18 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 	 */
 	@Deprecated
 	@EventHandler(priority = EventPriority.HIGH)
+	public void onPlayerDeath(@NonNull PlayerDeathEvent e) {
+		val player = e.getEntity();
+		BackHandler.recordLocation(player, player.getLocation());
+	}
+
+	/**
+	 * @param e 事件
+	 *
+	 * @deprecated BUKKIT
+	 */
+	@Deprecated
+	@EventHandler(priority = EventPriority.HIGH)
 	public void onPlayerQuit(@NonNull PlayerQuitEvent e) {
 		callClear(e.getPlayer());
 	}
@@ -617,7 +630,7 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 		 * @param player 玩家
 		 * @param loc    本地坐标
 		 */
-		private static void recordLocation(@NonNull Player player, @NonNull Location loc) {
+		public static void recordLocation(@NonNull Player player, @NonNull Location loc) {
 			BACKS.put(player.getName(), toSLoc(loc));
 		}
 
@@ -627,7 +640,7 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 		 * @param player   玩家
 		 * @param toServer 玩家即将传送的服务器(null为本地)
 		 */
-		private static void recordLocation(@NonNull Player player, String toServer) {
+		public static void recordLocation(@NonNull Player player, String toServer) {
 			recordLocation(player, toServer, null);
 		}
 
@@ -639,7 +652,7 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 		 * @param toServer 玩家即将传送的服务器
 		 * @param toPlayer 玩家即将传送的玩家
 		 */
-		private static void recordLocation(@NonNull Player player, String toServer, String toPlayer) {
+		public static void recordLocation(@NonNull Player player, String toServer, String toPlayer) {
 			val name = player.getName();
 			val loc = toSLoc(player.getLocation());
 			if (toServer == null && toPlayer == null) {
@@ -1094,7 +1107,8 @@ public final class Core implements PluginMessageListener, MESSAGE, Listener {
 			listenCallBack(player, Channel.TP_LOC, 0, (BoolConsumer) success -> {
 				if (!success) BC_ERROR.send(player);
 			});
-			Channel.TpLoc.s0C_tpLoc(loc, loc.getServer());
+			byte[] data = Channel.TpLoc.s0C_tpLoc(loc, loc.getServer());
+			Main.send(player, data);
 		}
 
 		/**

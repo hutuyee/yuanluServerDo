@@ -37,6 +37,7 @@ public final class CmdWarp extends TabWarp {
 					msg("not-found", sender, arg);
 				} else {
 					msg("tp", sender, name, server);
+					Core.BackHandler.recordLocation(player, server);
 					Core.listenCallBack(player, Channel.WARP, 3, (BoolConsumer) success -> {
 						if (!success) BC_ERROR.send(sender);
 					});
