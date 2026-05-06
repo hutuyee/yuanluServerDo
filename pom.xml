@@ -45,10 +45,6 @@
                                 <pattern>org.bstats</pattern>
                                 <shadedPattern>yuan.plugins.serverDo.bstats</shadedPattern>
                             </relocation>
-                            <relocation>
-                                <pattern>cn.mapland.yuanlu.updater</pattern>
-                                <shadedPattern>yuan.plugins.serverDo.updater</shadedPattern>
-                            </relocation>
                         </relocations>
                     </configuration>
                     <executions>

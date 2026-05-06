@@ -68,11 +68,5 @@
             <version>3.0.0</version>
             <scope>compile</scope>
         </dependency>
-
-        <dependency>
-            <groupId>cn.mapland.yuanlu</groupId>
-            <artifactId>UpdaterClient-bukkit</artifactId>
-            <version>1.0.9</version>
-        </dependency>
     </dependencies>
 </project>

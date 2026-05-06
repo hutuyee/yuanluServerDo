@@ -22,7 +22,7 @@ Minecraft cross-server plugin suite (Java 8, Maven multi-module). Supports Bukki
 ## Build
 
 - Requires Java 8+ (CI uses 17)
-- Uses `maven-shade-plugin` with relocations for `org.bstats` and `cn.mapland.yuanlu.updater`
+- Uses `maven-shade-plugin` with relocations for `org.bstats`
 - All modules declare `<minimizeJar>true</minimizeJar>`
 
 ```bash
@@ -96,7 +96,7 @@ Build artifacts in each module's `target/`:
 | Module | External Dep | Scope |
 |--------|-------------|-------|
 | common | `lombok` | provided |
-| bukkit | `bukkit 1.15.1`, `bstats-bukkit`, `UpdaterClient-bukkit` | provided / compile |
+| bukkit | `bukkit 1.15.1`, `bstats-bukkit` | provided / compile |
 | bungeecord | `bungeecord-api 1.16-R0.5`, `bstats-bungeecord` | provided / compile |
 | velocity | `velocity-api 3.3.0-SNAPSHOT`, `bungeecord-config`, `bstats-velocity` | provided / compile |
 
