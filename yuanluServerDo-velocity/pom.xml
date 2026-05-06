@@ -69,14 +69,14 @@
         <dependency>
             <groupId>net.md-5</groupId>
             <artifactId>bungeecord-config</artifactId>
-            <version>1.16-R0.4</version>
+            <version>1.16-R0.5</version>
             <scope>compile</scope>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.bstats/bstats-bukkit -->
+        <!-- https://mvnrepository.com/artifact/org.bstats/bstats-velocity -->
         <dependency>
             <groupId>org.bstats</groupId>
             <artifactId>bstats-velocity</artifactId>
-            <version>2.2.1</version>
+            <version>3.0.0</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
