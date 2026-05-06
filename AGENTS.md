@@ -24,19 +24,51 @@ Minecraft cross-server plugin suite (Java 8, Maven multi-module). Supports Bukki
 - Requires Java 8+ (CI uses 17)
 - Uses `maven-shade-plugin` with relocations for `org.bstats`
 - All modules declare `<minimizeJar>true</minimizeJar>`
+- **Maven Wrapper included** — no need to install Maven globally
+
+### Local Build Commands
 
 ```bash
-mvn -B package
+# Full build (all modules)
+./mvnw -B clean package
+
+# Build specific module and its dependencies
+./mvnw -B clean package -pl yuanluServerDo-bukkit -am
+
+# Skip tests (faster build)
+./mvnw -B clean package -DskipTests
+
+# Install to local repository
+./mvnw -B clean install
 ```
 
-Build artifacts in each module's `target/`:
+**Note**: On Windows, use `mvnw.cmd` instead of `./mvnw`.
+
+### Build Artifacts
+
+Artifacts are generated in each module's `target/` directory:
 - `yuanluServerDo-bukkit/target/*.jar`
 - `yuanluServerDo-bungeecord/target/*.jar`
 - `yuanluServerDo-velocity/target/*.jar`
 - `yuanluServerDo-bukkit-bungeecord/target/*.jar` (fat JAR)
 - `yuanluServerDo-bukkit-velocity/target/*.jar` (fat JAR)
 
-## Architecture Conventions
+### CI / Release (GitHub Actions)
+
+Triggered automatically when a **release is published** on GitHub:
+
+1. GitHub Actions runs `mvn -B package --file pom.xml`
+2. All 5 JAR artifacts are uploaded to the release page
+
+**Workflow file**: `.github/workflows/Upload Release Asset.yml`
+
+**Required permissions**: The workflow uses `gh release upload` which requires `contents: write` permission.
+
+To create a new release:
+1. Update version in root `pom.xml` (e.g., `1.2.2` → `1.2.3`)
+2. Commit and push to `dev` branch
+3. Create a new release on GitHub (tag should match version)
+4. Actions will automatically build and attach JARs
 
 ### Cross-Server Protocol
 
@@ -101,13 +133,24 @@ Build artifacts in each module's `target/`:
 | velocity | `velocity-api 3.3.0-SNAPSHOT`, `bungeecord-config`, `bstats-velocity` | provided / compile |
 
 - Parent POM defines `yl-yuanlu-maven.pkg.coding.net` repository for internal artifacts
-- `settings.xml` references CODING Maven registry credentials (env vars)
+- ~~`settings.xml` references CODING Maven registry credentials (env vars)~~ (removed — no longer needed)
 
-## CI / Release
+## CI / Release (GitHub Actions)
 
-GitHub Action `.github/workflows/Upload Release Asset.yml` triggers on release `published`:
-1. `mvn -B package --file pom.xml`
-2. Uploads all 5 JAR artifacts to the release
+Triggered automatically when a **release is published** on GitHub:
+
+1. GitHub Actions runs `mvn -B package --file pom.xml`
+2. All 5 JAR artifacts are uploaded to the release page
+
+**Workflow file**: `.github/workflows/Upload Release Asset.yml`
+
+**Required permissions**: The workflow uses `gh release upload` which requires `contents: write` permission.
+
+To create a new release:
+1. Update version in root `pom.xml` (e.g., `1.2.2` → `1.2.3`)
+2. Commit and push to `dev` branch
+3. Create a new release on GitHub (tag should match version)
+4. Actions will automatically build and attach JARs
 
 ## Testing Notes
 

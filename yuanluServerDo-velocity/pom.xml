@@ -50,6 +50,10 @@
             <id>Sonatype</id>
             <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
+        <repository>
+            <id>minebench</id>
+            <url>https://repo.minebench.de/</url>
+        </repository>
     </repositories>
 
     <dependencies>
@@ -69,7 +73,7 @@
         <dependency>
             <groupId>net.md-5</groupId>
             <artifactId>bungeecord-config</artifactId>
-            <version>1.16-R0.5</version>
+            <version>1.16-R0.5-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.bstats/bstats-velocity -->

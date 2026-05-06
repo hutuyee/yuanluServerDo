@@ -8,6 +8,49 @@ Allow players on the group server to seamlessly execute commands across servers
 理论全版本支持  
 Theory full version support
 
+## 构建 / Build
+
+本项目使用 **Maven Wrapper** (`mvnw`)，无需全局安装 Maven。
+
+### 常用命令
+
+```bash
+# 完整构建（所有模块）
+./mvnw -B clean package
+
+# 构建指定模块及其依赖
+./mvnw -B clean package -pl yuanluServerDo-bukkit -am
+
+# 跳过测试（更快）
+./mvnw -B clean package -DskipTests
+
+# 安装到本地仓库
+./mvnw -B clean install
+```
+
+> Windows 用户请使用 `mvnw.cmd` 代替 `./mvnw`
+
+### 构建产物
+
+构建完成后，各模块的 JAR 文件位于对应 `target/` 目录下：
+
+| 文件 | 说明 |
+|------|------|
+| `yuanluServerDo-bukkit/target/*.jar` | Bukkit/Spigot/Paper 插件 |
+| `yuanluServerDo-bungeecord/target/*.jar` | BungeeCord 代理插件 |
+| `yuanluServerDo-velocity/target/*.jar` | Velocity 代理插件 |
+| `yuanluServerDo-bukkit-bungeecord/target/*.jar` | 合并包（Bukkit + BungeeCord） |
+| `yuanluServerDo-bukkit-velocity/target/*.jar` | 合并包（Bukkit + Velocity） |
+
+### CI / 自动发布
+
+GitHub Actions 会在发布 (Release) 时自动构建并上传 JAR：
+
+1. 更新根目录 `pom.xml` 中的版本号
+2. 提交并推送到 `dev` 分支
+3. 在 GitHub 上创建 Release（Tag 与版本号一致）
+4. Actions 自动构建并将 5 个 JAR 上传到 Release 附件
+
 ## 交流
 
 [discord](https://discord.gg/5SZNhTkqJg)
