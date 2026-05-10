@@ -28,9 +28,6 @@ import com.velocitypowered.api.scheduler.ScheduledTask;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.val;
-import net.md_5.bungee.config.Configuration;
-import net.md_5.bungee.config.ConfigurationProvider;
-import net.md_5.bungee.config.YamlConfiguration;
 import org.bstats.charts.MultiLineChart;
 import org.bstats.charts.SimplePie;
 import org.bstats.velocity.Metrics;
@@ -55,8 +52,8 @@ import java.util.logging.Logger;
 public final class Main {
 	/** 插件名称 用于信息提示 模板自动生成 */
 	public final static    String                         SHOW_NAME    = ShareData.SHOW_NAME;
-	/** BC通道标识符: {@link ShareData#BC_CHANNEL} */
-	public static final    ChannelIdentifier              BC_CHANNEL   = new LegacyChannelIdentifier(ShareData.BC_CHANNEL);
+	/** 代理通道标识符: {@link ShareData#BC_CHANNEL} */
+	public static final    ChannelIdentifier              PROXY_CHANNEL = new LegacyChannelIdentifier(ShareData.BC_CHANNEL);
 	/** 数据包队列 */
 	private static final   Map<ServerInfo, Queue<byte[]>> PACKET_QUEUE = new HashMap<>();
 	/** 调试模式 */
@@ -204,7 +201,7 @@ public final class Main {
 	 * @param buf    数据
 	 */
 	public static void send(@NonNull ServerConnection server, @NonNull byte[] buf) {
-		server.sendPluginMessage(BC_CHANNEL, buf);
+		server.sendPluginMessage(PROXY_CHANNEL, buf);
 		if (isDEBUG()) getMain().getLogger().info("发送: " + server.getServerInfo().getName() + " " + Arrays.toString(buf));
 	}
 
@@ -272,10 +269,10 @@ public final class Main {
 	/** 检查中央配置文件 */
 	private void checkYuanluConfig() {
 		val configFile = getDataFolder().getParent().resolve("yuanlu").resolve("config.yml");
-		Configuration config = null;
+		YamlConfig config = null;
 
 		if (Files.isRegularFile(configFile)) try (val in = Files.newInputStream(configFile)) {
-			config = ConfigurationProvider.getProvider(YamlConfiguration.class).load(in);
+			config = YamlConfig.load(in);
 		} catch (FileNotFoundException ignored) {
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -292,7 +289,7 @@ public final class Main {
 
 	/**
 	 * 登录事件<br>
-	 * 唤起数据包发送队列(对应bc的send.queue实现)
+	 * 唤起数据包发送队列
 	 *
 	 * @param event ServerConnectedEvent
 	 *
@@ -323,7 +320,7 @@ public final class Main {
 	 *
 	 * @param e 插件消息
 	 *
-	 * @deprecated BUNGEE
+	 * @deprecated EVENT
 	 */
 	@Deprecated
 	@Subscribe
@@ -432,7 +429,7 @@ public final class Main {
 		ConfigManager.init(loadFile("proxy-config.yml"));
 		// 注册信道
 
-		getProxy().getChannelRegistrar().register(BC_CHANNEL);
+		getProxy().getChannelRegistrar().register(PROXY_CHANNEL);
 		getLogger().info(SHOW_NAME + "-启动(velocity)");
 		getLogger().info(Main.getPluginContainer().getDescription().getVersion().orElse("Unknown"));
 
@@ -465,7 +462,7 @@ public final class Main {
 	public void event_onServerPostConnect(ServerPostConnectEvent e) {
 		val server = e.getPlayer().getCurrentServer().orElseThrow(NullPointerException::new);
 		send(server, Channel.VersionCheck.sendS());
-		ConfigManager.sendBungeeInfoToServer(server);
+		ConfigManager.sendVelocityInfoToServer(server);
 		Core.autoVanish(e.getPlayer(), server);
 	}
 
@@ -478,7 +475,7 @@ public final class Main {
 	 *
 	 * @author yuanlu
 	 */
-	public Configuration loadFile(String fileName) {
+	public YamlConfig loadFile(String fileName) {
 		try {
 			val file = getDataFolder().resolve(fileName);
 			if (!Files.exists(file.getParent())) Files.createDirectories(file.getParent());
@@ -491,7 +488,7 @@ public final class Main {
 				}
 			}
 			try (val in = Files.newInputStream(file)) {
-				return ConfigurationProvider.getProvider(YamlConfiguration.class).load(in);
+				return YamlConfig.load(in);
 			}
 		} catch (RuntimeException e) {
 			throw e;
@@ -510,7 +507,7 @@ public final class Main {
 	 *
 	 * @author yuanlu
 	 */
-	public Configuration loadFile(String fileName, String... oldNames) {
+	public YamlConfig loadFile(String fileName, String... oldNames) {
 
 		val file = getDataFolder().resolve(fileName);
 		if (Files.isRegularFile(file)) return loadFile(fileName);
@@ -700,7 +697,7 @@ public final class Main {
 					m.createConnectionRequest(targetServer);
 					player.createConnectionRequest(targetServer).connect().thenAcceptAsync(r -> {
 						val success = r.getStatus() == Status.SUCCESS || r.getStatus() == Status.ALREADY_CONNECTED;
-						send(player, Channel.Tp.s7S_tpThirdReceive(success, false/* design for BC */));
+						send(player, Channel.Tp.s7S_tpThirdReceive(success, false/* design for proxy */));
 					});
 				}
 			});
