@@ -28,7 +28,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 /**
- * BC端核心
+ * Velocity端核心
  *
  * @author yuanlu
  */

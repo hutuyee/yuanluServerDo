@@ -7,9 +7,6 @@ import com.google.common.base.Objects;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ServerConnection;
 import lombok.*;
-import net.md_5.bungee.config.Configuration;
-import net.md_5.bungee.config.ConfigurationProvider;
-import net.md_5.bungee.config.YamlConfiguration;
 import yuan.plugins.serverDo.*;
 import yuan.plugins.serverDo.Tool.ThrowableFunction;
 import yuan.plugins.serverDo.Tool.ThrowableRunnable;
@@ -34,7 +31,7 @@ public final class ConfigManager {
 	/** 禁用的服务器 */
 	private static final   HashSet<String>                  BAN_SERVER = new HashSet<>();
 	/** 配置文件 */
-	private static @Getter Configuration                    config;
+	private static @Getter YamlConfig                        config;
 	/** tab替换 */
 	private static @Getter
 	@Setter                String                           tabReplace;
@@ -101,7 +98,7 @@ public final class ConfigManager {
 	 *
 	 * @param config config
 	 */
-	public static void init(Configuration config) {
+	public static void init(YamlConfig config) {
 		ConfigManager.config = config;
 		val tabReplace = config.getString("player-tab-replace", "yl★:" + Tool.randomString(8));
 		setTabReplace(tabReplace);
@@ -120,7 +117,7 @@ public final class ConfigManager {
 	 *
 	 * @param config 配置文件
 	 */
-	private static void loadGroup(Configuration config) {
+	private static void loadGroup(YamlConfig config) {
 		val sg = config.getSection("server-group");
 		if (sg == null) {
 			errorGroup = true;
@@ -176,11 +173,11 @@ public final class ConfigManager {
 	}
 
 	/**
-	 * 发送BC信息给子服务器
+	 * 发送代理信息给子服务器
 	 *
 	 * @param server 服务器
 	 */
-	public static void sendBungeeInfoToServer(ServerConnection server) {
+	public static void sendVelocityInfoToServer(ServerConnection server) {
 		Main.send(server, serverInfo);
 	}
 
@@ -223,9 +220,9 @@ public final class ConfigManager {
 		WARP("warp.yml") {
 			@Override
 			protected void load0() throws IOException {
-				Configuration warps = YAML.load(getFile());
+				YamlConfig warps = YamlConfig.load(getFile());
 				for (String name : warps.getKeys()) {
-					Configuration warp = warps.getSection(name);
+					YamlConfig warp = warps.getSection(name);
 
 					String world = warp.getString("world", null);
 					String server = warp.getString("server", null);
@@ -244,7 +241,7 @@ public final class ConfigManager {
 
 			@Override
 			protected void save0() throws IOException {
-				Configuration warps = new Configuration();
+				YamlConfig warps = new YamlConfig();
 				for (Map.Entry<String, ShareLocation> e : WARPS.entrySet()) {
 					String name = e.getKey();
 					ShareLocation warp = e.getValue();
@@ -256,13 +253,11 @@ public final class ConfigManager {
 					warps.set(name + ".yaw", warp.getYaw());
 					warps.set(name + ".pitch", warp.getPitch());
 				}
-				YAML.save(warps, getFile());
+				YamlConfig.save(warps, getFile());
 			}
 
 		};
 
-		/** Yaml处理器 */
-		protected static final ConfigurationProvider   YAML       = ConfigurationProvider.getProvider(YamlConfiguration.class);
 		/** 保存延时 */
 		private static final   EnumMap<ConfFile, Long> SAVE_DELAY = new EnumMap<>(ConfFile.class);
 		/** 文件名 */
@@ -333,8 +328,6 @@ public final class ConfigManager {
 			}
 		};
 
-		/** Yaml处理器 */
-		protected static final ConfigurationProvider         YAML       = ConfigurationProvider.getProvider(YamlConfiguration.class);
 		/** 文件名 */
 		protected final        String                        fname;
 		/** 需要保存 */
@@ -443,7 +436,7 @@ public final class ConfigManager {
 		private HashMap<String, ShareLocation> load0(@NonNull UUID uid) throws IOException {
 			HashMap<String, ShareLocation> m = new HashMap<>();
 			val f = HOME.getFile(uid, false);
-			val warps = PlayerConfFile.YAML.load(f);
+			val warps = YamlConfig.load(f);
 			for (val name : warps.getKeys()) {
 				val warp = warps.getSection(name);
 
@@ -473,7 +466,7 @@ public final class ConfigManager {
 		 * @throws IOException IOE
 		 */
 		private void save0(@NonNull UUID uid, HashMap<String, ShareLocation> map) throws IOException {
-			val warps = new Configuration();
+			val warps = new YamlConfig();
 			for (val e : map.entrySet()) {
 				val name = e.getKey();
 				val warp = e.getValue();
@@ -485,7 +478,7 @@ public final class ConfigManager {
 				warps.set(name + ".yaw", warp.getYaw());
 				warps.set(name + ".pitch", warp.getPitch());
 			}
-			PlayerConfFile.YAML.save(warps, PlayerConfFile.HOME.getFile(uid, true));
+			YamlConfig.save(warps, PlayerConfFile.HOME.getFile(uid, true));
 		}
 	}
 }
