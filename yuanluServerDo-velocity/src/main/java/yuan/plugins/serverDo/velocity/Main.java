@@ -448,6 +448,7 @@ public final class Main {
 	public void event_onProxyShutdown(ProxyShutdownEvent event) {
 		val timeAmendTask = this.timeAmendTask;
 		if (timeAmendTask != null) timeAmendTask.cancel();
+		ConfigManager.closeSave();
 	}
 
 	/**
