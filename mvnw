@@ -301,6 +301,16 @@ fi
 MAVEN_CMD_LINE_ARGS="$MAVEN_CONFIG $@"
 export MAVEN_CMD_LINE_ARGS
 
+# Auto-generate development version if -Drevision is not provided
+if ! echo "$MAVEN_CMD_LINE_ARGS" | grep -q -- "-Drevision="; then
+  if command -v git >/dev/null 2>&1 && [ -d "$MAVEN_PROJECTBASEDIR/.git" ]; then
+    GIT_SHA=$(git -C "$MAVEN_PROJECTBASEDIR" rev-parse --short=8 HEAD 2>/dev/null || echo "unknown")
+    DEV_VERSION="$(date +%Y.%m.%d.%H.%M.%S)-${GIT_SHA}-SNAPSHOT"
+    MAVEN_CONFIG="$MAVEN_CONFIG -Drevision=${DEV_VERSION}"
+    echo "[yuanluServerDo] Auto-generated dev version: ${DEV_VERSION}"
+  fi
+fi
+
 WRAPPER_LAUNCHER=org.apache.maven.wrapper.MavenWrapperMain
 
 exec "$JAVACMD" \
